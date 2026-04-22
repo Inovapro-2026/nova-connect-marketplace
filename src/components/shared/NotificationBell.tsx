@@ -62,7 +62,7 @@ export function NotificationBell() {
         event: 'INSERT', 
         schema: 'public', 
         table: 'notifications',
-        filter: `user_id=eq.${user.id}`
+        filter: `recipient_id=eq.${user.id}`
       }, () => {
         loadNotifications();
         toast.info('Você tem uma nova notificação!');
