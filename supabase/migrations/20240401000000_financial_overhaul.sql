@@ -134,8 +134,8 @@ SELECT
     id, 
     'pedido', 
     CASE 
-        WHEN status IN ('pago', 'concluido', 'entregue') THEN 'completed'
-        WHEN status IN ('cancelado', 'devolvido') THEN 'cancelled'
+        WHEN status IN ('pago', 'concluido', 'entregue', 'finalizado') THEN 'completed'
+        WHEN status IN ('cancelado', 'devolvido', 'reembolsado', 'estornado') THEN 'cancelled'
         ELSE 'pending'
     END,
     'Venda pedido #' || numero,
@@ -151,8 +151,8 @@ SELECT
     id, 
     'saque', 
     CASE 
-        WHEN status = 'pago' THEN 'completed'
-        WHEN status = 'cancelado' THEN 'cancelled'
+        WHEN status IN ('pago', 'concluído', 'sucesso') THEN 'completed'
+        WHEN status IN ('cancelado', 'recusado', 'falho') THEN 'cancelled'
         ELSE 'pending'
     END,
     'Saque solicitado via PIX',
@@ -252,8 +252,8 @@ BEGIN
         UPDATE public.financial_ledger
         SET 
             status = CASE 
-                WHEN NEW.status IN ('pago', 'concluido', 'entregue') THEN 'completed'
-                WHEN NEW.status IN ('cancelado', 'devolvido') THEN 'cancelled'
+                WHEN NEW.status IN ('pago', 'concluido', 'entregue', 'finalizado') THEN 'completed'
+                WHEN NEW.status IN ('cancelado', 'devolvido', 'reembolsado', 'estornado') THEN 'cancelled'
                 ELSE 'pending'
             END,
             valor = COALESCE(NEW.valor_liquido_vendedor, NEW.valor_total * 0.9),
@@ -270,8 +270,8 @@ BEGIN
             NEW.id,
             'pedido',
             CASE 
-                WHEN NEW.status IN ('pago', 'concluido', 'entregue') THEN 'completed'
-                WHEN NEW.status IN ('cancelado', 'devolvido') THEN 'cancelled'
+                WHEN NEW.status IN ('pago', 'concluido', 'entregue', 'finalizado') THEN 'completed'
+                WHEN NEW.status IN ('cancelado', 'devolvido', 'reembolsado', 'estornado') THEN 'cancelled'
                 ELSE 'pending'
             END,
             'Venda pedido #' || NEW.numero,
