@@ -171,7 +171,7 @@ export default function SaquesView() {
 
           <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
             <div className="text-sm text-muted-foreground mb-1">Disponível para Saque</div>
-            <div className="text-3xl font-bold text-primary">{formatBRL(stats.disponivel)}</div>
+            <div className="text-3xl font-bold text-primary">{formatBRL(0)}</div>
           </div>
 
           <form onSubmit={handleRequestSaque} className="space-y-4">
