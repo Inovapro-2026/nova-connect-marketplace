@@ -48,20 +48,20 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const { data, error } = await (supabase
-        .from('categories' as any)
-        .select('*') as any);
+      const { data, error } = await (supabase as any)
+        .from('categories')
+        .select('*');
       
       if (error) throw error;
 
       // Filter by scope
       const filtered = (data as any[])?.map((c: any) => ({
         ...c,
-        name: c.name || c.nome || 'Sem nome',
-        scope: c.scope || c.tipo || 'both'
+        name: c.nome || c.name || 'Sem nome',
+        scope: c.tipo || c.scope || 'both'
       })).filter((c: any) => 
         !c.scope || c.scope === 'both' || 
-        (itemType === 'servico' ? c.scope === 'service' : c.scope === 'product')
+        (itemType === 'servico' ? (c.scope === 'service' || c.scope === 'servico') : (c.scope === 'product' || c.scope === 'produto'))
       ) || [];
       setCategories(filtered);
     } catch (err) {
@@ -82,15 +82,15 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
       
       const scope = itemType === 'servico' ? 'service' : 'product';
       
-      const { data, error } = await (supabase
-        .from('categories' as any)
+      const { data, error } = await (supabase as any)
+        .from('categories')
         .insert({ 
-          name: name.trim(), 
+          nome: name.trim(), 
           slug, 
-          scope 
+          tipo: scope 
         })
         .select()
-        .single() as any);
+        .single();
 
       if (error) throw error;
       

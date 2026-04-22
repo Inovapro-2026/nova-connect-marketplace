@@ -34,12 +34,12 @@ export function NotificationBell() {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await (supabase
-        .from('notifications' as any)
+      const { data, error } = await (supabase as any)
+        .from('notifications')
         .select('*')
-        .eq('recipient_id' as any, user.id)
+        .eq('recipient_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(10) as any);
+        .limit(10);
       
       if (error) throw error;
       
@@ -62,7 +62,7 @@ export function NotificationBell() {
         event: 'INSERT', 
         schema: 'public', 
         table: 'notifications',
-        filter: `user_id=eq.${user.id}`
+        filter: `recipient_id=eq.${user.id}`
       }, () => {
         loadNotifications();
         toast.info('Você tem uma nova notificação!');
