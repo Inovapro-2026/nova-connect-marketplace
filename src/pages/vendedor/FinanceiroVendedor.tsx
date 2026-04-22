@@ -7,8 +7,12 @@ import { DollarSign, ArrowDownToLine, Clock } from 'lucide-react';
 import { formatBRL, formatDate } from '@/lib/format';
 
 interface Transacao {
-  id: string; valor_bruto: number; valor_liquido: number; status: string;
-  tipo: string; created_at: string | null;
+  id: string; 
+  valor: number; 
+  status: string;
+  tipo: string; 
+  created_at: string | null;
+  descricao?: string;
 }
 
 export default function FinanceiroVendedor() {
