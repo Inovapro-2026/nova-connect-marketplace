@@ -16,13 +16,11 @@ import { useNavigate } from 'react-router-dom';
 
 interface Notification {
   id: string;
-  titulo: string;
-  mensagem: string;
-  lida: boolean;
-  tipo: string;
+  title: string;
+  message: string;
+  read: boolean;
   created_at: string;
-  arquivo_url?: string;
-  arquivo_nome?: string;
+  attachment_url?: string;
 }
 
 export function NotificationBell() {
@@ -36,20 +34,17 @@ export function NotificationBell() {
     if (!user) return;
     setLoading(true);
     try {
-      const { data: usuario } = await supabase.from('usuarios').select('id').eq('auth_user_id', user.id).single();
-      if (!usuario) return;
-
-      const { data, error } = await supabase
-        .from('notificacoes')
+      const { data, error } = await (supabase
+        .from('notifications' as any)
         .select('*')
-        .eq('usuario_id', usuario.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(10) as any);
       
       if (error) throw error;
       
       setNotifications(data || []);
-      setUnreadCount((data || []).filter(n => !n.lida).length);
+      setUnreadCount((data || []).filter(n => !n.read).length);
     } catch (err) {
       console.error('Error loading notifications:', err);
     } finally {
@@ -62,11 +57,12 @@ export function NotificationBell() {
 
     // Realtime subscription
     const channel = supabase
-      .channel('notificacoes_alteracoes')
+      .channel('notifications_changes')
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
-        table: 'notificacoes' 
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
       }, () => {
         loadNotifications();
         toast.info('Você tem uma nova notificação!');
@@ -80,8 +76,8 @@ export function NotificationBell() {
 
   const markAsRead = async (id: string) => {
     try {
-      await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
+      await (supabase.from('notifications' as any).update({ read: true }).eq('id', id) as any);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err) {
       console.error('Error marking as read:', err);
@@ -91,11 +87,8 @@ export function NotificationBell() {
   const markAllAsRead = async () => {
     if (!user) return;
     try {
-      const { data: usuario } = await supabase.from('usuarios').select('id').eq('auth_user_id', user.id).single();
-      if (!usuario) return;
-
-      await supabase.from('notificacoes').update({ lida: true }).eq('usuario_id', usuario.id).eq('lida', false);
-      setNotifications(prev => prev.map(n => ({ ...n, lida: true })));
+      await (supabase.from('notifications' as any).update({ read: true }).eq('user_id', user.id).eq('read', false) as any);
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
       toast.success('Todas as notificações lidas');
     } catch (err) {
@@ -139,28 +132,24 @@ export function NotificationBell() {
               {notifications.map((n) => (
                 <div 
                   key={n.id} 
-                  className={`p-4 transition-all hover:bg-surface-2/50 cursor-pointer relative group ${!n.lida ? 'bg-primary/5' : ''}`}
+                  className={`p-4 transition-all hover:bg-surface-2/50 cursor-pointer relative group ${!n.read ? 'bg-primary/5' : ''}`}
                   onClick={() => {
                     markAsRead(n.id);
                     // Lógica para abrir detalhes ou navegar
                   }}
                 >
                   <div className="flex gap-3">
-                    <div className={`h-10 w-10 rounded-xl shrink-0 flex items-center justify-center ${
-                      n.tipo === 'sistema' ? 'bg-amber-500/10 text-amber-500' : 
-                      n.tipo === 'financeiro' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'
-                    }`}>
-                      {n.tipo === 'sistema' ? <AlertCircle className="h-5 w-5" /> : 
-                       n.tipo === 'financeiro' ? <Info className="h-5 w-5" /> : <Mail className="h-5 w-5" />}
+                    <div className="h-10 w-10 rounded-xl shrink-0 flex items-center justify-center bg-primary/10 text-primary">
+                      <Mail className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-sm truncate pr-2">{n.titulo}</span>
+                        <span className="font-bold text-sm truncate pr-2">{n.title}</span>
                         <span className="text-[10px] text-muted-foreground whitespace-nowrap">{formatDate(n.created_at)}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{n.mensagem}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{n.message}</p>
                       
-                      {n.arquivo_url && (
+                      {n.attachment_url && (
                         <div className="flex items-center gap-2">
                            <Button 
                              variant="outline" 
@@ -168,7 +157,7 @@ export function NotificationBell() {
                              className="h-7 text-[10px] rounded-lg border-primary/20 hover:border-primary text-primary bg-primary/5"
                              onClick={(e) => {
                                e.stopPropagation();
-                               window.open(n.arquivo_url, '_blank');
+                               window.open(n.attachment_url, '_blank');
                              }}
                            >
                              <Download className="h-3 w-3 mr-1" /> Baixar Anexo
@@ -177,7 +166,7 @@ export function NotificationBell() {
                       )}
                     </div>
                   </div>
-                  {!n.lida && (
+                  {!n.read && (
                     <div className="absolute right-4 bottom-4 h-2 w-2 bg-primary rounded-full" />
                   )}
                 </div>
