@@ -32,7 +32,7 @@ export default function FinanceiroVendedor() {
       if (pv) setStats({ disp: Number(pv.saldo_disponivel ?? 0), pendente: Number(pv.saldo_pendente ?? 0), sacado: Number(pv.saldo_sacado ?? 0) });
 
       if (pv) {
-        const { data: tx } = await (supabase.from('financial_ledger') as any)
+        const { data: tx } = await (supabase as any).from('financial_ledger')
           .select('id, valor, status, tipo, created_at, descricao')
           .eq('vendedor_id', pv.id).order('created_at', { ascending: false }).limit(20);
         setTransacoes((tx as any[]) ?? []);
