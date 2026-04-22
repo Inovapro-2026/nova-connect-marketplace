@@ -76,14 +76,27 @@ export default function AdminSaques() {
 
   async function handleAprovar(id: string) {
     try {
-      const { error } = await supabase.rpc('aprovar_saque_vendedor', {
+      // Find the saque in the local state to get its value for logging
+      const saque = saques.find(s => s.id === id);
+      const valor = saque ? (saque.valor_bruto || saque.valor) : 0;
+      
+      console.log("Iniciando aprovação de saque...");
+      console.log("ID do Saque:", id);
+      console.log("Valor Bruto:", valor);
+
+      const { error } = await (supabase.rpc as any)('aprovar_saque_vendedor', {
         p_saque_id: id
       });
 
       if (error) throw error;
+      
+      console.log("Saque aprovado com sucesso no banco!");
       toast.success('Saque marcado como pago!');
+      
+      // Refresh list to show updated status and potentially updated balances
       fetchSaques();
     } catch (err: any) {
+      console.error("Erro ao aprovar saque:", err);
       toast.error('Erro ao aprovar saque: ' + err.message);
     }
   }
