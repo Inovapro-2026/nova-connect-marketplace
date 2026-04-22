@@ -37,7 +37,7 @@ export default function SaquesView() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [saques, setSaques] = useState<Saque[]>([]);
-  const [stats, setStats] = useState({ disponivel: 0, pendente: 0, processando: 0 });
+  const [stats, setStats] = useState({ disponivel: 0, pendente: 0, processando: 0, sacado: 0 });
   const [valorSaque, setValorSaque] = useState('');
   const [pixInfo, setPixInfo] = useState({ tipo: '', chave: '' });
 
@@ -61,7 +61,7 @@ export default function SaquesView() {
 
       const { data: pv } = await supabase
         .from('perfis_vendedor')
-        .select('id, saldo_disponivel, saldo_pendente, pix_tipo, pix_chave')
+        .select('id, saldo_disponivel, saldo_pendente, saldo_sacado, pix_tipo, pix_chave')
         .eq('usuario_id', u.id)
         .maybeSingle();
 
@@ -81,7 +81,8 @@ export default function SaquesView() {
         setStats({
           disponivel: Number(pv.saldo_disponivel || 0),
           pendente: Number(pv.saldo_pendente || 0),
-          processando
+          processando,
+          sacado: Number(pv.saldo_sacado || 0)
         });
         setPixInfo({
           tipo: pv.pix_tipo || '',
@@ -261,6 +262,14 @@ export default function SaquesView() {
                   <span className="text-sm text-muted-foreground">Valor livre para saque imediato</span>
                 </div>
                 <span className="text-xl font-bold text-success">{formatBRL(stats.disponivel)}</span>
+              </div>
+
+              <div className="flex justify-between items-center p-3 rounded-lg bg-muted/10 border border-border/50">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground uppercase font-bold tracking-tight">Total Sacado</span>
+                  <span className="text-sm text-muted-foreground">Soma de retiradas concluídas</span>
+                </div>
+                <span className="text-xl font-bold text-foreground">{formatBRL(stats.sacado)}</span>
               </div>
             </div>
           </Card>

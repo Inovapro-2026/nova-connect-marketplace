@@ -7,8 +7,12 @@ import { DollarSign, ArrowDownToLine, Clock } from 'lucide-react';
 import { formatBRL, formatDate } from '@/lib/format';
 
 interface Transacao {
-  id: string; valor_bruto: number; valor_liquido: number; status: string;
-  tipo: string; created_at: string | null;
+  id: string; 
+  valor: number; 
+  status: string;
+  tipo: string; 
+  created_at: string | null;
+  descricao?: string;
 }
 
 export default function FinanceiroVendedor() {
@@ -28,10 +32,10 @@ export default function FinanceiroVendedor() {
       if (pv) setStats({ disp: Number(pv.saldo_disponivel ?? 0), pendente: Number(pv.saldo_pendente ?? 0), sacado: Number(pv.saldo_sacado ?? 0) });
 
       if (pv) {
-        const { data: tx } = await supabase.from('transacoes')
-          .select('id, valor_bruto, valor_liquido, status, tipo, created_at')
+        const { data: tx } = await (supabase as any).from('financial_ledger')
+          .select('id, valor, status, tipo, created_at, descricao')
           .eq('vendedor_id', pv.id).order('created_at', { ascending: false }).limit(20);
-        setTransacoes((tx as Transacao[]) ?? []);
+        setTransacoes((tx as any[]) ?? []);
       }
       setLoading(false);
     })();
@@ -70,13 +74,25 @@ export default function FinanceiroVendedor() {
           <div className="divide-y divide-border/50">
             {transacoes.map((t) => (
               <div key={t.id} className="py-3 flex items-center justify-between">
-                <div>
-                  <div className="font-medium capitalize">{t.tipo}</div>
-                  <div className="text-xs text-muted-foreground">{formatDate(t.created_at)} • {t.status}</div>
+                <div className="flex flex-col gap-0.5">
+                  <div className="font-semibold text-sm capitalize">
+                    {t.tipo === 'credit_sale' ? 'Venda' : 
+                     t.tipo === 'withdraw_request' ? 'Saque' : 
+                     t.tipo === 'withdraw_paid' ? 'Saque Pago' : 
+                     t.tipo === 'withdraw_fee' ? 'Taxa de Saque' : t.tipo}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
+                    {formatDate(t.created_at)} • {
+                      t.status === 'completed' ? 'Concluído' : 
+                      t.status === 'pending' ? 'Pendente' : 'Cancelado'
+                    }
+                  </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-display font-semibold">{formatBRL(t.valor_liquido)}</div>
-                  <div className="text-xs text-muted-foreground">Bruto {formatBRL(t.valor_bruto)}</div>
+                  <div className={`font-display font-bold ${t.valor < 0 ? 'text-destructive' : 'text-success'}`}>
+                    {t.valor < 0 ? '-' : '+'}{formatBRL(Math.abs(t.valor))}
+                  </div>
+                  {t.descricao && <div className="text-[10px] text-muted-foreground truncate max-w-[120px]">{t.descricao}</div>}
                 </div>
               </div>
             ))}
