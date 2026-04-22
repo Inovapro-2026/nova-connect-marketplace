@@ -37,7 +37,7 @@ export function NotificationBell() {
       const { data, error } = await (supabase
         .from('notifications' as any)
         .select('*')
-        .eq('user_id', user.id)
+        .eq('recipient_id' as any, user.id)
         .order('created_at', { ascending: false })
         .limit(10) as any);
       
@@ -87,7 +87,7 @@ export function NotificationBell() {
   const markAllAsRead = async () => {
     if (!user) return;
     try {
-      await (supabase.from('notifications' as any).update({ read: true }).eq('user_id', user.id).eq('read', false) as any);
+      await (supabase.from('notifications' as any).update({ read: true }).eq('recipient_id', user.id).eq('read', false) as any);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
       toast.success('Todas as notificações lidas');

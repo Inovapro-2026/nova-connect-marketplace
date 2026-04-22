@@ -714,10 +714,10 @@ function UserAvisosTab({ user, adminAuthId }: { user: Usuario, adminAuthId: stri
 
   const loadHistory = async () => {
     try {
-      const { data } = await (supabase.from('notifications' as any)
+      const { data } = await ((supabase as any).from('notifications')
         .select('*')
-        .eq('user_id', user.auth_user_id)
-        .order('created_at', { ascending: false }) as any);
+        .eq('recipient_id', user.auth_user_id)
+        .order('created_at', { ascending: false }));
       
       setHistory(data || []);
     } catch (err) {
@@ -732,12 +732,11 @@ function UserAvisosTab({ user, adminAuthId }: { user: Usuario, adminAuthId: stri
     setSending(true);
     try {
       const { error } = await (supabase.from('notifications' as any).insert({
-        user_id: user.auth_user_id,
+        recipient_id: user.auth_user_id,
         title: title,
         message: msg,
-        attachment_url: fileUrl || null,
-        created_at: new Date().toISOString()
-      }) as any);
+        attachment_url: fileUrl || null
+      } as any) as any);
 
       if (error) throw error;
 
