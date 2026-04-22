@@ -6,9 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  Bell, Mail, Download, ExternalLink, 
-  Trash2, CheckCircle2, AlertCircle, Info,
-  Search, Filter
+  Bell, Mail, Download, 
+  Trash2, AlertCircle, Info
 } from 'lucide-react';
 import { formatDate } from '@/lib/format';
 import { toast } from 'sonner';
@@ -22,7 +21,6 @@ interface Notification {
   created_at: string;
   arquivo_url?: string;
   arquivo_nome?: string;
-  admin_id?: string;
 }
 
 export default function Avisos() {
@@ -35,23 +33,32 @@ export default function Avisos() {
     if (!user) return;
     setLoading(true);
     try {
-      const { data: usuario } = await supabase.from('usuarios').select('id').eq('auth_user_id', user.id).single();
-      if (!usuario) return;
-
-      let query = supabase
-        .from('notificacoes')
+      // Trying the new 'avisos' table first
+      let { data, error } = await supabase
+        .from('avisos')
         .select('*')
-        .eq('usuario_id', usuario.id)
+        .or(`target_usuario_id.is.null,target_usuario_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
-      if (filter === 'unread') {
-        query = query.eq('lida', false);
+      if (error) {
+        // Fallback to 'notificacoes'
+        const { data: oldData, error: oldError } = await supabase
+          .from('notificacoes')
+          .select('*')
+          .eq('usuario_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (oldError) throw oldError;
+        data = oldData;
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
+      if (filter === 'unread') {
+        data = data?.filter(n => !n.lida) || [];
+      }
+
       setNotifications(data || []);
     } catch (err) {
+      console.error('Error loading avisos:', err);
       toast.error('Erro ao carregar avisos');
     } finally {
       setLoading(false);
@@ -65,7 +72,10 @@ export default function Avisos() {
 
   const markAsRead = async (id: string) => {
     try {
-      await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+      const { error } = await supabase.from('avisos').update({ lida: true }).eq('id', id);
+      if (error) {
+         await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+      }
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
     } catch (err) {
       console.error('Error marking as read:', err);
@@ -74,8 +84,10 @@ export default function Avisos() {
 
   const deleteNotification = async (id: string) => {
     try {
-      const { error } = await supabase.from('notificacoes').delete().eq('id', id);
-      if (error) throw error;
+      const { error } = await supabase.from('avisos').delete().eq('id', id);
+      if (error) {
+         await supabase.from('notificacoes').delete().eq('id', id);
+      }
       setNotifications(prev => prev.filter(n => n.id !== id));
       toast.success('Aviso removido');
     } catch (err) {
@@ -92,7 +104,7 @@ export default function Avisos() {
         </div>
         <div className="flex bg-surface-1 p-1 rounded-xl border border-border/50">
           <Button 
-            variant={filter === 'all' ? 'primary' : 'ghost'} 
+            variant={filter === 'all' ? 'default' : 'ghost'} 
             size="sm" 
             onClick={() => setFilter('all')}
             className="rounded-lg font-bold"
@@ -100,7 +112,7 @@ export default function Avisos() {
             Todos
           </Button>
           <Button 
-            variant={filter === 'unread' ? 'primary' : 'ghost'} 
+            variant={filter === 'unread' ? 'default' : 'ghost'} 
             size="sm" 
             onClick={() => setFilter('unread')}
             className="rounded-lg font-bold"
@@ -135,7 +147,7 @@ export default function Avisos() {
               <div className="p-6 flex flex-col md:flex-row gap-6">
                 <div className={`h-14 w-14 rounded-2xl shrink-0 flex items-center justify-center shadow-lg ${
                   n.tipo === 'sistema' ? 'bg-amber-500 text-white' : 
-                  n.tipo === 'financeiro' ? 'bg-success text-white' : 'bg-primary text-white'
+                  n.tipo === 'financeiro' ? 'bg-green-500 text-white' : 'bg-primary text-white'
                 }`}>
                   {n.tipo === 'sistema' ? <AlertCircle className="h-7 w-7" /> : 
                    n.tipo === 'financeiro' ? <Info className="h-7 w-7" /> : <Mail className="h-7 w-7" />}
