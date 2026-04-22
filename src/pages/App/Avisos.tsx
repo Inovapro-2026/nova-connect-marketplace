@@ -32,9 +32,9 @@ export default function Avisos() {
     setLoading(true);
     try {
       const { data, error } = await (supabase
-        .from('notifications' as any)
+        .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('recipient_id', user.id)
         .order('created_at', { ascending: false }) as any);
 
       if (error) throw error;
