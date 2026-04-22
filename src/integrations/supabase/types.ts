@@ -224,7 +224,9 @@ export type Database = {
           id: string
           nome: string
           ordem: number | null
+          scope: string | null
           slug: string
+          tipo: string | null
         }
         Insert: {
           ativo?: boolean | null
@@ -235,7 +237,9 @@ export type Database = {
           id?: string
           nome: string
           ordem?: number | null
+          scope?: string | null
           slug: string
+          tipo?: string | null
         }
         Update: {
           ativo?: boolean | null
@@ -246,7 +250,9 @@ export type Database = {
           id?: string
           nome?: string
           ordem?: number | null
+          scope?: string | null
           slug?: string
+          tipo?: string | null
         }
         Relationships: []
       }
@@ -321,22 +327,28 @@ export type Database = {
           created_at: string
           customer_id: string
           id: string
+          order_id: string | null
           product_id: string | null
           seller_id: string
+          status_atendimento: string | null
         }
         Insert: {
           created_at?: string
           customer_id: string
           id?: string
+          order_id?: string | null
           product_id?: string | null
           seller_id: string
+          status_atendimento?: string | null
         }
         Update: {
           created_at?: string
           customer_id?: string
           id?: string
+          order_id?: string | null
           product_id?: string | null
           seller_id?: string
+          status_atendimento?: string | null
         }
         Relationships: [
           {
@@ -344,6 +356,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
             referencedColumns: ["id"]
           },
           {
@@ -839,6 +858,48 @@ export type Database = {
         }
         Relationships: []
       }
+      logs_administrativos: {
+        Row: {
+          acao: string
+          admin_id: string
+          alvo_usuario_id: string
+          created_at: string | null
+          detalhes: Json | null
+          id: string
+        }
+        Insert: {
+          acao: string
+          admin_id: string
+          alvo_usuario_id: string
+          created_at?: string | null
+          detalhes?: Json | null
+          id?: string
+        }
+        Update: {
+          acao?: string
+          admin_id?: string
+          alvo_usuario_id?: string
+          created_at?: string | null
+          detalhes?: Json | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logs_administrativos_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_administrativos_alvo_usuario_id_fkey"
+            columns: ["alvo_usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       logs_envio: {
         Row: {
           canal: string
@@ -1007,6 +1068,9 @@ export type Database = {
       }
       notificacoes: {
         Row: {
+          admin_id: string | null
+          arquivo_nome: string | null
+          arquivo_url: string | null
           created_at: string | null
           id: string
           lida: boolean | null
@@ -1018,6 +1082,9 @@ export type Database = {
           usuario_id: string
         }
         Insert: {
+          admin_id?: string | null
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
           created_at?: string | null
           id?: string
           lida?: boolean | null
@@ -1029,6 +1096,9 @@ export type Database = {
           usuario_id: string
         }
         Update: {
+          admin_id?: string | null
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
           created_at?: string | null
           id?: string
           lida?: boolean | null
@@ -1040,6 +1110,13 @@ export type Database = {
           usuario_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notificacoes_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notificacoes_usuario_id_fkey"
             columns: ["usuario_id"]
@@ -1308,9 +1385,11 @@ export type Database = {
           requisitos_cliente: string | null
           servico_id: string | null
           status: Database["public"]["Enums"]["status_pedido_enum"]
+          status_servico: string | null
           taxa_asaas: number | null
           taxa_marketplace: number | null
           taxa_plataforma: number
+          tipo_item: string | null
           transportadora: string | null
           updated_at: string | null
           valor_liquido: number | null
@@ -1340,9 +1419,11 @@ export type Database = {
           requisitos_cliente?: string | null
           servico_id?: string | null
           status?: Database["public"]["Enums"]["status_pedido_enum"]
+          status_servico?: string | null
           taxa_asaas?: number | null
           taxa_marketplace?: number | null
           taxa_plataforma?: number
+          tipo_item?: string | null
           transportadora?: string | null
           updated_at?: string | null
           valor_liquido?: number | null
@@ -1372,9 +1453,11 @@ export type Database = {
           requisitos_cliente?: string | null
           servico_id?: string | null
           status?: Database["public"]["Enums"]["status_pedido_enum"]
+          status_servico?: string | null
           taxa_asaas?: number | null
           taxa_marketplace?: number | null
           taxa_plataforma?: number
+          tipo_item?: string | null
           transportadora?: string | null
           updated_at?: string | null
           valor_liquido?: number | null
@@ -1566,50 +1649,69 @@ export type Database = {
       }
       products: {
         Row: {
-          category: string | null
+          categoria_id: string | null
           created_at: string | null
+          descricao_completa: string | null
+          descricao_curta: string | null
           description: string | null
           external_link: string | null
           id: string
           image_url: string | null
+          item_type: string | null
           name: string
           price: number
           seller_id: string
           status: Database["public"]["Enums"]["product_status"]
+          tipo_entrega: string | null
           updated_at: string | null
         }
         Insert: {
-          category?: string | null
+          categoria_id?: string | null
           created_at?: string | null
+          descricao_completa?: string | null
+          descricao_curta?: string | null
           description?: string | null
           external_link?: string | null
           id?: string
           image_url?: string | null
+          item_type?: string | null
           name: string
           price?: number
           seller_id: string
           status?: Database["public"]["Enums"]["product_status"]
+          tipo_entrega?: string | null
           updated_at?: string | null
         }
         Update: {
-          category?: string | null
+          categoria_id?: string | null
           created_at?: string | null
+          descricao_completa?: string | null
+          descricao_curta?: string | null
           description?: string | null
           external_link?: string | null
           id?: string
           image_url?: string | null
+          item_type?: string | null
           name?: string
           price?: number
           seller_id?: string
           status?: Database["public"]["Enums"]["product_status"]
+          tipo_entrega?: string | null
           updated_at?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: "products_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "products_seller_id_fkey"
             columns: ["seller_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "perfis_vendedor"
             referencedColumns: ["id"]
           },
         ]
@@ -1699,8 +1801,12 @@ export type Database = {
           observacao: string | null
           processado_at: string | null
           status: Database["public"]["Enums"]["status_saque_enum"]
+          taxa_valor: number | null
+          tipo_pix: string | null
           updated_at: string | null
           valor: number
+          valor_bruto: number | null
+          valor_liquido: number | null
           vendedor_id: string
         }
         Insert: {
@@ -1712,8 +1818,12 @@ export type Database = {
           observacao?: string | null
           processado_at?: string | null
           status?: Database["public"]["Enums"]["status_saque_enum"]
+          taxa_valor?: number | null
+          tipo_pix?: string | null
           updated_at?: string | null
           valor: number
+          valor_bruto?: number | null
+          valor_liquido?: number | null
           vendedor_id: string
         }
         Update: {
@@ -1725,8 +1835,12 @@ export type Database = {
           observacao?: string | null
           processado_at?: string | null
           status?: Database["public"]["Enums"]["status_saque_enum"]
+          taxa_valor?: number | null
+          tipo_pix?: string | null
           updated_at?: string | null
           valor?: number
+          valor_bruto?: number | null
+          valor_liquido?: number | null
           vendedor_id?: string
         }
         Relationships: [
@@ -1783,6 +1897,7 @@ export type Database = {
           descricao_completa: string
           descricao_curta: string
           faq: Json | null
+          fluxo_chat_obrigatorio: boolean | null
           id: string
           imagem_principal_url: string | null
           prazo_entrega_dias: number
@@ -1807,6 +1922,7 @@ export type Database = {
           descricao_completa: string
           descricao_curta: string
           faq?: Json | null
+          fluxo_chat_obrigatorio?: boolean | null
           id?: string
           imagem_principal_url?: string | null
           prazo_entrega_dias?: number
@@ -1831,6 +1947,7 @@ export type Database = {
           descricao_completa?: string
           descricao_curta?: string
           faq?: Json | null
+          fluxo_chat_obrigatorio?: boolean | null
           id?: string
           imagem_principal_url?: string | null
           prazo_entrega_dias?: number
@@ -1987,17 +2104,20 @@ export type Database = {
           atualizado_em: string | null
           auth_user_id: string
           avatar_url: string | null
+          bloqueado_em: string | null
           cpf_cnpj: string | null
           created_at: string | null
           data_nascimento: string | null
           email: string
           id: string
+          motivo_bloqueio: string | null
           nome: string
           sobrenome: string
           status: string | null
           status_conta: string | null
           telefone: string | null
           tipo_conta: string | null
+          ultimo_login: string | null
           updated_at: string | null
         }
         Insert: {
@@ -2005,17 +2125,20 @@ export type Database = {
           atualizado_em?: string | null
           auth_user_id: string
           avatar_url?: string | null
+          bloqueado_em?: string | null
           cpf_cnpj?: string | null
           created_at?: string | null
           data_nascimento?: string | null
           email: string
           id?: string
+          motivo_bloqueio?: string | null
           nome: string
           sobrenome: string
           status?: string | null
           status_conta?: string | null
           telefone?: string | null
           tipo_conta?: string | null
+          ultimo_login?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -2023,17 +2146,20 @@ export type Database = {
           atualizado_em?: string | null
           auth_user_id?: string
           avatar_url?: string | null
+          bloqueado_em?: string | null
           cpf_cnpj?: string | null
           created_at?: string | null
           data_nascimento?: string | null
           email?: string
           id?: string
+          motivo_bloqueio?: string | null
           nome?: string
           sobrenome?: string
           status?: string | null
           status_conta?: string | null
           telefone?: string | null
           tipo_conta?: string | null
+          ultimo_login?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -2226,6 +2352,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_change_user_password: {
+        Args: { new_password: string; target_auth_id: string }
+        Returns: boolean
+      }
+      aprovar_saque_vendedor: {
+        Args: { p_saque_id: string }
+        Returns: undefined
+      }
       cleanup_expired_verificacao_codigos: { Args: never; Returns: undefined }
       get_current_salao_id: { Args: never; Returns: string }
       get_next_order_number: { Args: never; Returns: number }
@@ -2242,6 +2376,27 @@ export type Database = {
       }
       increment_views: { Args: { post_id: string }; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
+      log_admin_action: {
+        Args: {
+          p_acao: string
+          p_admin_auth_id: string
+          p_detalhes: Json
+          p_target_usuario_id: string
+        }
+        Returns: undefined
+      }
+      solicitar_saque_vendedor: {
+        Args: {
+          p_chave_pix: string
+          p_taxa_valor: number
+          p_tipo_pix: string
+          p_valor: number
+          p_valor_bruto: number
+          p_valor_liquido: number
+          p_vendedor_id: string
+        }
+        Returns: undefined
+      }
       start_chat_seguro: {
         Args: {
           p_customer_raw_id: string
@@ -2255,6 +2410,28 @@ export type Database = {
           product_id: string
           seller_id: string
         }[]
+      }
+      start_chat_seguro_v2: {
+        Args: {
+          p_customer_raw_id: string
+          p_product_id: string
+          p_seller_raw_id: string
+        }
+        Returns: {
+          created_at: string
+          customer_id: string
+          id: string
+          order_id: string | null
+          product_id: string | null
+          seller_id: string
+          status_atendimento: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "chats"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
     }
     Enums: {

@@ -41,9 +41,9 @@ export default function ProdutoDetalhe() {
     setLoading(true);
 
     (async () => {
-      const { data: p, error } = await supabase.from('products').select('*').eq('id', id).maybeSingle();
+      const { data: p, error } = await (supabase.from('products') as any).select('*').eq('id', id).maybeSingle();
       if (error || !p) { setProduto(null); setLoading(false); return; }
-      setProduto(p as ProdutoDetalheData);
+      setProduto(p as unknown as ProdutoDetalheData);
       document.title = `${p.name} — InovaPro Shop`;
 
       // The seller_id in products is the auth_user_id (owner)
@@ -132,7 +132,7 @@ export default function ProdutoDetalhe() {
       }
 
       // Start secure chat with product linkage
-      const { data: chat, error } = await supabase.rpc('start_chat_seguro_v2', {
+      const { data: chat, error } = await (supabase.rpc as any)('start_chat_seguro_v2', {
         p_customer_raw_id: cli.id,
         p_seller_raw_id: vendedor.id,
         p_product_id: produto.id,

@@ -49,7 +49,7 @@ export default function Avisos() {
           .order('created_at', { ascending: false });
         
         if (oldError) throw oldError;
-        setNotifications(oldData || []);
+        setNotifications((oldData as any) || []);
       } else {
         let filteredData = data || [];
         if (filter === 'unread') {

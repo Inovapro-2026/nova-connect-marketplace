@@ -138,7 +138,7 @@ export function MensagensThread({ basePath }: Props) {
     
     const mappedChat: Chat = {
       ...cData,
-      product: cData.products
+      product: cData.products as any
     };
     setChat(mappedChat);
 
