@@ -127,7 +127,11 @@ export default function SaquesView() {
       const { data: u } = await supabase.from('usuarios').select('id').eq('auth_user_id', user!.id).single();
       const { data: pv } = await supabase.from('perfis_vendedor').select('id').eq('usuario_id', u.id).single();
 
-      const { error } = await supabase.rpc('solicitar_saque_vendedor', {
+      console.log("Solicitando saque...");
+      console.log("Valor Bruto:", valor);
+      console.log("Saldo disponível antes:", stats.disponivel);
+
+      const { error } = await (supabase.rpc as any)('solicitar_saque_vendedor', {
         p_vendedor_id: pv.id,
         p_valor: valor,
         p_valor_bruto: valor,
