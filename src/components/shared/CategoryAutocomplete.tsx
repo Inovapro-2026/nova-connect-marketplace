@@ -46,10 +46,10 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('categories')
+      const { data, error } = await (supabase
+        .from('categories' as any)
         .select('id, name, slug, scope')
-        .order('name');
+        .order('name') as any);
       
       if (error) throw error;
 
@@ -77,15 +77,15 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
       
       const scope = itemType === 'servico' ? 'service' : 'product';
       
-      const { data, error } = await supabase
-        .from('categories')
+      const { data, error } = await (supabase
+        .from('categories' as any)
         .insert({ 
           name: name.trim(), 
           slug, 
           scope 
         })
         .select()
-        .single();
+        .single() as any);
 
       if (error) throw error;
       
