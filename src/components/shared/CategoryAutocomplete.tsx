@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Check, ChevronsUpDown, Plus, Search, Loader2 } from 'lucide-react';
@@ -24,6 +23,7 @@ interface Category {
   id: string;
   nome: string;
   slug: string;
+  scope?: string;
 }
 
 interface Props {
@@ -46,14 +46,29 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
   const loadCategories = async () => {
     setLoading(true);
     try {
+      // We use the new 'categories' table with 'scope' field
       const { data, error } = await supabase
-        .from('categorias')
-        .select('id, nome, slug')
-        .or(`tipo.eq.geral,tipo.eq.${itemType === 'servico' ? 'servico' : 'produto'}`)
+        .from('categories')
+        .select('*')
         .order('nome');
       
-      if (error) throw error;
-      setCategories(data || []);
+      if (error) {
+        // Fallback to 'categorias' if 'categories' doesn't exist yet (for transition)
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('categorias')
+          .select('id, nome, slug')
+          .order('nome');
+        
+        if (fallbackError) throw fallbackError;
+        setCategories(fallbackData || []);
+      } else {
+        // Filter by scope
+        const filtered = data?.filter(c => 
+          !c.scope || c.scope === 'both' || 
+          (itemType === 'servico' ? c.scope === 'service' : c.scope === 'product')
+        ) || [];
+        setCategories(filtered);
+      }
     } catch (err) {
       console.error('Error loading categories:', err);
     } finally {
@@ -66,37 +81,51 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
     setCreating(true);
     try {
       const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+      const scope = itemType === 'servico' ? 'service' : 'product';
       
+      // Try 'categories' first
       const { data, error } = await supabase
-        .from('categorias')
+        .from('categories')
         .insert({ 
           nome: name.trim(), 
           slug, 
-          tipo: itemType 
+          scope 
         })
         .select()
         .single();
 
       if (error) {
-        if (error.code === '23505') {
-          toast.error('Esta categoria já existe');
-          return;
-        }
-        throw error;
+        // Fallback to 'categorias'
+        const { data: fbData, error: fbError } = await supabase
+          .from('categorias')
+          .insert({ 
+            nome: name.trim(), 
+            slug
+          })
+          .select()
+          .single();
+        
+        if (fbError) throw fbError;
+        
+        toast.success('Categoria criada!');
+        await loadCategories();
+        onChange(fbData.id);
+      } else {
+        toast.success('Categoria criada!');
+        await loadCategories();
+        onChange(data.id);
       }
-
-      toast.success('Categoria criada!');
-      await loadCategories();
-      onChange(data.id);
       setOpen(false);
     } catch (err: any) {
-      toast.error('Erro ao criar categoria');
+      if (err.code === '23505') {
+        toast.error('Esta categoria já existe');
+      } else {
+        toast.error('Erro ao criar categoria');
+      }
     } finally {
       setCreating(false);
     }
   };
-
-  const selectedCategory = categories.find((c) => c.nome === value);
 
   return (
     <div className="space-y-2">
