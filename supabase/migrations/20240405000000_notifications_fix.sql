@@ -1,10 +1,31 @@
--- Fix notifications table
+-- Final Fix for notifications module
 DO $$
 BEGIN
+    -- Rename table if it exists as 'notificacoes' or 'avisos'
+    -- (already handled in previous migration, but let's ensure 'notifications' is the one)
+    
+    -- Rename columns to match requested schema
     IF EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'notifications' AND column_name = 'user_id') THEN
         ALTER TABLE public.notifications RENAME COLUMN user_id TO recipient_id;
     END IF;
     
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'notifications' AND column_name = 'titulo') THEN
+        ALTER TABLE public.notifications RENAME COLUMN titulo TO title;
+    END IF;
+
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'notifications' AND column_name = 'mensagem') THEN
+        ALTER TABLE public.notifications RENAME COLUMN mensagem TO message;
+    END IF;
+
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'notifications' AND column_name = 'lida') THEN
+        ALTER TABLE public.notifications RENAME COLUMN lida TO read;
+    END IF;
+
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'notifications' AND column_name = 'anexo_url') THEN
+        ALTER TABLE public.notifications RENAME COLUMN anexo_url TO attachment_url;
+    END IF;
+
+    -- Add updated_at
     IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'notifications' AND column_name = 'updated_at') THEN
         ALTER TABLE public.notifications ADD COLUMN updated_at TIMESTAMPTZ DEFAULT now();
     END IF;
@@ -13,6 +34,7 @@ BEGIN
     ALTER TABLE public.notifications ALTER COLUMN recipient_id SET NOT NULL;
     ALTER TABLE public.notifications ALTER COLUMN title SET NOT NULL;
     ALTER TABLE public.notifications ALTER COLUMN message SET NOT NULL;
+    ALTER TABLE public.notifications ALTER COLUMN read SET DEFAULT false;
 END $$;
 
 -- RLS
