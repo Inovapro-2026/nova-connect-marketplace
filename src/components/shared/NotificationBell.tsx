@@ -16,11 +16,11 @@ import { useNavigate } from 'react-router-dom';
 
 interface Notification {
   id: string;
-  title: string;
-  message: string;
-  read: boolean;
+  titulo: string;
+  mensagem: string;
+  lida: boolean;
   created_at: string;
-  attachment_url?: string;
+  link?: string;
 }
 
 export function NotificationBell() {
@@ -34,17 +34,18 @@ export function NotificationBell() {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
       
       if (error) throw error;
       
-      setNotifications(data || []);
-      setUnreadCount((data || []).filter(n => !n.read).length);
+      const mappedData = (data as any) || [];
+      setNotifications(mappedData);
+      setUnreadCount(mappedData.filter((n: any) => !n.lida).length);
     } catch (err) {
       console.error('Error loading notifications:', err);
     } finally {
@@ -62,7 +63,7 @@ export function NotificationBell() {
         event: 'INSERT', 
         schema: 'public', 
         table: 'notifications',
-        filter: `recipient_id=eq.${user.id}`
+        filter: `user_id=eq.${user.id}`
       }, () => {
         loadNotifications();
         toast.info('Você tem uma nova notificação!');
@@ -76,8 +77,8 @@ export function NotificationBell() {
 
   const markAsRead = async (id: string) => {
     try {
-      await (supabase.from('notifications' as any).update({ read: true }).eq('id', id) as any);
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+      await supabase.from('notifications').update({ lida: true }).eq('id', id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err) {
       console.error('Error marking as read:', err);
@@ -87,8 +88,8 @@ export function NotificationBell() {
   const markAllAsRead = async () => {
     if (!user) return;
     try {
-      await (supabase.from('notifications' as any).update({ read: true }).eq('recipient_id', user.id).eq('read', false) as any);
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      await supabase.from('notifications').update({ lida: true }).eq('user_id', user.id).eq('lida', false);
+      setNotifications(prev => prev.map(n => ({ ...n, lida: true })));
       setUnreadCount(0);
       toast.success('Todas as notificações lidas');
     } catch (err) {
@@ -132,10 +133,9 @@ export function NotificationBell() {
               {notifications.map((n) => (
                 <div 
                   key={n.id} 
-                  className={`p-4 transition-all hover:bg-surface-2/50 cursor-pointer relative group ${!n.read ? 'bg-primary/5' : ''}`}
+                  className={`p-4 transition-all hover:bg-surface-2/50 cursor-pointer relative group ${!n.lida ? 'bg-primary/5' : ''}`}
                   onClick={() => {
                     markAsRead(n.id);
-                    // Lógica para abrir detalhes ou navegar
                   }}
                 >
                   <div className="flex gap-3">
@@ -144,12 +144,12 @@ export function NotificationBell() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-sm truncate pr-2">{n.title}</span>
+                        <span className="font-bold text-sm truncate pr-2">{n.titulo}</span>
                         <span className="text-[10px] text-muted-foreground whitespace-nowrap">{formatDate(n.created_at)}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{n.message}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{n.mensagem}</p>
                       
-                      {n.attachment_url && (
+                      {n.link && (
                         <div className="flex items-center gap-2">
                            <Button 
                              variant="outline" 
@@ -157,7 +157,7 @@ export function NotificationBell() {
                              className="h-7 text-[10px] rounded-lg border-primary/20 hover:border-primary text-primary bg-primary/5"
                              onClick={(e) => {
                                e.stopPropagation();
-                               window.open(n.attachment_url, '_blank');
+                               window.open(n.link, '_blank');
                              }}
                            >
                              <Download className="h-3 w-3 mr-1" /> Baixar Anexo
@@ -166,7 +166,7 @@ export function NotificationBell() {
                       )}
                     </div>
                   </div>
-                  {!n.read && (
+                  {!n.lida && (
                     <div className="absolute right-4 bottom-4 h-2 w-2 bg-primary rounded-full" />
                   )}
                 </div>

@@ -14,11 +14,11 @@ import { toast } from 'sonner';
 
 interface Notification {
   id: string;
-  title: string;
-  message: string;
-  read: boolean;
+  titulo: string;
+  mensagem: string;
+  lida: boolean;
   created_at: string;
-  attachment_url?: string;
+  link?: string;
 }
 
 export default function Avisos() {
@@ -33,17 +33,17 @@ export default function Avisos() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: supabaseError } = await ((supabase as any)
+      const { data, error: supabaseError } = await (supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false }));
 
       if (supabaseError) throw supabaseError;
       
-      let filteredData = data || [];
+      let filteredData = (data as any) || [];
       if (filter === 'unread') {
-        filteredData = filteredData.filter((n: any) => !n.read);
+        filteredData = filteredData.filter((n: any) => !n.lida);
       }
       setNotifications(filteredData);
     } catch (err: any) {
@@ -62,9 +62,9 @@ export default function Avisos() {
 
   const markAsRead = async (id: string) => {
     try {
-      const { error } = await (supabase.from('notifications' as any).update({ read: true }).eq('id', id) as any);
+      const { error } = await supabase.from('notifications').update({ lida: true }).eq('id', id);
       if (error) throw error;
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
     } catch (err) {
       console.error('Error marking as read:', err);
     }
@@ -72,7 +72,7 @@ export default function Avisos() {
 
   const deleteNotification = async (id: string) => {
     try {
-      const { error } = await (supabase.from('notifications' as any).delete().eq('id', id) as any);
+      const { error } = await supabase.from('notifications').delete().eq('id', id);
       if (error) throw error;
       setNotifications(prev => prev.filter(n => n.id !== id));
       toast.success('Notificação removida');
@@ -136,8 +136,8 @@ export default function Avisos() {
           {notifications.map((n) => (
             <Card 
               key={n.id} 
-              className={`surface-1 border-border/50 overflow-hidden rounded-2xl transition-all hover:shadow-xl hover:border-primary/30 group ${!n.read ? 'border-l-4 border-l-primary' : ''}`}
-              onClick={() => !n.read && markAsRead(n.id)}
+              className={`surface-1 border-border/50 overflow-hidden rounded-2xl transition-all hover:shadow-xl hover:border-primary/30 group ${!n.lida ? 'border-l-4 border-l-primary' : ''}`}
+              onClick={() => !n.lida && markAsRead(n.id)}
             >
               <div className="p-6 flex flex-col md:flex-row gap-6">
                 <div className="h-14 w-14 rounded-2xl shrink-0 flex items-center justify-center shadow-lg bg-primary text-white">
@@ -147,28 +147,28 @@ export default function Avisos() {
                 <div className="flex-1 space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <h3 className={`text-xl font-bold tracking-tight ${!n.read ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        {n.title}
+                      <h3 className={`text-xl font-bold tracking-tight ${!n.lida ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {n.titulo}
                       </h3>
-                      {!n.read && <Badge variant="secondary" className="rounded-full bg-primary/20 text-primary border-0 font-bold uppercase text-[10px]">Novo</Badge>}
+                      {!n.lida && <Badge variant="secondary" className="rounded-full bg-primary/20 text-primary border-0 font-bold uppercase text-[10px]">Novo</Badge>}
                     </div>
                     <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
                        {formatDate(n.created_at)}
                     </span>
                   </div>
                   
-                  <p className={`text-base leading-relaxed ${!n.read ? 'text-muted-foreground font-medium' : 'text-muted-foreground/70'}`}>
-                    {n.message}
+                  <p className={`text-base leading-relaxed ${!n.lida ? 'text-muted-foreground font-medium' : 'text-muted-foreground/70'}`}>
+                    {n.mensagem}
                   </p>
                   
-                  {n.attachment_url && (
+                  {n.link && (
                     <div className="pt-4 flex flex-wrap gap-3">
                        <Button 
                          variant="outline" 
                          className="rounded-xl border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-bold h-11"
                          onClick={(e) => {
                             e.stopPropagation();
-                            window.open(n.attachment_url, '_blank');
+                            window.open(n.link, '_blank');
                          }}
                        >
                          <Download className="h-4 w-4 mr-2" /> 
