@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 
 interface Category {
   id: string;
-  nome: string;
+  name: string;
   slug: string;
   scope?: string;
 }
@@ -46,31 +46,22 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      // We use the new 'categories' table with 'scope' field
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('categories')
-        .select('*')
-        .order('nome');
+        .select('id, name, slug, scope')
+        .order('name');
       
-      if (error) {
-        // Fallback to 'categorias' if 'categories' doesn't exist yet (for transition)
-        const { data: fallbackData, error: fallbackError } = await (supabase as any)
-          .from('categorias')
-          .select('id, nome, slug')
-          .order('nome');
-        
-        if (fallbackError) throw fallbackError;
-        setCategories(fallbackData || []);
-      } else {
-        // Filter by scope
-        const filtered = (data as any[])?.filter((c: any) => 
-          !c.scope || c.scope === 'both' || 
-          (itemType === 'servico' ? c.scope === 'service' : c.scope === 'product')
-        ) || [];
-        setCategories(filtered);
-      }
+      if (error) throw error;
+
+      // Filter by scope
+      const filtered = (data as any[])?.filter((c: any) => 
+        !c.scope || c.scope === 'both' || 
+        (itemType === 'servico' ? c.scope === 'service' : c.scope === 'product')
+      ) || [];
+      setCategories(filtered);
     } catch (err) {
       console.error('Error loading categories:', err);
+      toast.error('Erro ao carregar categorias');
     } finally {
       setLoading(false);
     }
@@ -80,43 +71,30 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
     if (!name.trim()) return;
     setCreating(true);
     try {
-      const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+      const slug = name.toLowerCase().trim()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
+        .replace(/[^a-z0-9]+/g, '-');
+      
       const scope = itemType === 'servico' ? 'service' : 'product';
       
-      // Try 'categories' first
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('categories')
         .insert({ 
-          nome: name.trim(), 
+          name: name.trim(), 
           slug, 
           scope 
         })
         .select()
         .single();
 
-      if (error) {
-        // Fallback to 'categorias'
-        const { data: fbData, error: fbError } = await supabase
-          .from('categorias')
-          .insert({ 
-            nome: name.trim(), 
-            slug
-          })
-          .select()
-          .single();
-        
-        if (fbError) throw fbError;
-        
-        toast.success('Categoria criada!');
-        await loadCategories();
-        onChange(fbData.id);
-      } else {
-        toast.success('Categoria criada!');
-        await loadCategories();
-        onChange(data.id);
-      }
+      if (error) throw error;
+      
+      toast.success('Categoria criada!');
+      await loadCategories();
+      onChange(data.id);
       setOpen(false);
     } catch (err: any) {
+      console.error('Error creating category:', err);
       if (err.code === '23505') {
         toast.error('Esta categoria já existe');
       } else {
@@ -140,7 +118,7 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
           >
             {value ? (
               <span className="font-medium">
-                {categories.find(c => c.id === value)?.nome || 'Selecionado'}
+                {categories.find(c => c.id === value)?.name || 'Selecionado'}
               </span>
             ) : (
               <span className="text-muted-foreground">Selecionar categoria...</span>
@@ -187,7 +165,7 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
                     {categories.map((category) => (
                       <CommandItem
                         key={category.id}
-                        value={category.nome}
+                        value={category.name}
                         onSelect={() => {
                           onChange(category.id === value ? '' : category.id);
                           setOpen(false);
@@ -200,7 +178,7 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
                             value === category.id ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        <span className="flex-1 font-medium">{category.nome}</span>
+                        <span className="flex-1 font-medium">{category.name}</span>
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -208,7 +186,7 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
               )}
             </CommandList>
             
-            {searchValue && !categories.some(c => c.nome.toLowerCase() === searchValue.toLowerCase()) && !loading && (
+            {searchValue && !categories.some(c => c.name.toLowerCase() === searchValue.toLowerCase()) && !loading && (
                <div className="p-2 border-t border-border/50">
                   <Button 
                     type="button"
