@@ -31,22 +31,24 @@ export default function Avisos() {
   const load = async () => {
     if (!user) return;
     setLoading(true);
+    setError(null);
     try {
-      const { data, error } = await ((supabase as any)
+      const { data, error: supabaseError } = await ((supabase as any)
         .from('notifications')
         .select('*')
         .eq('recipient_id', user.id)
         .order('created_at', { ascending: false }));
 
-      if (error) throw error;
+      if (supabaseError) throw supabaseError;
       
       let filteredData = data || [];
       if (filter === 'unread') {
         filteredData = filteredData.filter((n: any) => !n.read);
       }
       setNotifications(filteredData);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading notifications:', err);
+      setError(err.message || 'Erro ao carregar notificações');
       toast.error('Erro ao carregar notificações');
     } finally {
       setLoading(false);
@@ -112,6 +114,15 @@ export default function Avisos() {
             <Skeleton key={i} className="h-32 w-full rounded-2xl" />
           ))}
         </div>
+      ) : error ? (
+        <Card className="surface-1 border-destructive/20 p-20 text-center rounded-3xl bg-destructive/5">
+          <div className="h-20 w-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="h-10 w-10 text-destructive" />
+          </div>
+          <h2 className="text-2xl font-bold mb-3 text-destructive">Falha ao carregar</h2>
+          <p className="text-muted-foreground mb-6">Não foi possível carregar suas notificações neste momento.</p>
+          <Button onClick={() => load()} variant="outline" className="rounded-full font-bold">Tentar novamente</Button>
+        </Card>
       ) : notifications.length === 0 ? (
         <Card className="surface-1 border-border/50 p-20 text-center rounded-3xl">
           <div className="h-20 w-20 bg-surface-2 rounded-full flex items-center justify-center mx-auto mb-6">
