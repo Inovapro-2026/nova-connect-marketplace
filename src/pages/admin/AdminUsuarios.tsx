@@ -714,22 +714,12 @@ function UserAvisosTab({ user, adminAuthId }: { user: Usuario, adminAuthId: stri
 
   const loadHistory = async () => {
     try {
-      const { data } = await supabase.from('avisos' as any)
+      const { data } = await supabase.from('notifications')
         .select('*')
-        .eq('target_usuario_id', user.auth_user_id)
+        .eq('user_id', user.auth_user_id)
         .order('created_at', { ascending: false });
       
-      if (data) {
-        setHistory(data);
-      } else {
-        // Fallback for old system
-        const { data: oldData } = await supabase.from('notificacoes')
-          .select('*')
-          .eq('usuario_id', user.id)
-          .eq('tipo', 'sistema')
-          .order('created_at', { ascending: false });
-        setHistory(oldData || []);
-      }
+      setHistory(data || []);
     } catch (err) {
       console.error('Error loading history:', err);
     }
@@ -741,28 +731,15 @@ function UserAvisosTab({ user, adminAuthId }: { user: Usuario, adminAuthId: stri
     if (!title || !msg) return toast.error('Preencha o título e a mensagem');
     setSending(true);
     try {
-      // 1. Insert into new 'avisos' table
-      const { error } = await supabase.from('avisos' as any).insert({
-        target_usuario_id: user.auth_user_id,
-        titulo: title,
-        mensagem: msg,
-        anexo_url: fileUrl || null,
+      const { error } = await supabase.from('notifications').insert({
+        user_id: user.auth_user_id,
+        title: title,
+        message: msg,
+        attachment_url: fileUrl || null,
         created_at: new Date().toISOString()
       });
 
-      if (error) {
-        // Fallback to old 'notificacoes'
-        const { data: admin } = await supabase.from('usuarios').select('id').eq('auth_user_id', adminAuthId).single();
-        await supabase.from('notificacoes').insert({
-          usuario_id: user.id,
-          tipo: 'sistema',
-          titulo: title,
-          mensagem: msg,
-          arquivo_url: fileUrl || null,
-          arquivo_nome: fileUrl ? 'Anexo Administrativo' : null,
-          admin_id: admin?.id
-        });
-      }
+      if (error) throw error;
 
       // 2. Log admin action
       await supabase.rpc('log_admin_action' as any, {
