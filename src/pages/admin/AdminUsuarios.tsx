@@ -13,7 +13,7 @@ import {
   ShieldAlert, Lock, Unlock, Mail, Bell, 
   ShoppingBag, MessageSquare, History, Pencil,
   CheckCircle2, AlertCircle, Trash2, Key,
-  ExternalLink, Download, Upload, Loader2
+  ExternalLink, Download, Upload, Loader2, DollarSign
 } from 'lucide-react';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
