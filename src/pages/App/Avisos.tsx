@@ -31,11 +31,11 @@ export default function Avisos() {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await (supabase
-        .from('notifications' as any)
+      const { data, error } = await ((supabase as any)
+        .from('notifications')
         .select('*')
-        .eq('recipient_id' as any, user.id)
-        .order('created_at', { ascending: false }) as any);
+        .eq('recipient_id', user.id)
+        .order('created_at', { ascending: false }));
 
       if (error) throw error;
       
