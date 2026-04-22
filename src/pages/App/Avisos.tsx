@@ -14,13 +14,11 @@ import { toast } from 'sonner';
 
 interface Notification {
   id: string;
-  titulo: string;
-  mensagem: string;
-  lida: boolean;
-  tipo: string;
+  title: string;
+  message: string;
+  read: boolean;
   created_at: string;
-  arquivo_url?: string;
-  arquivo_nome?: string;
+  attachment_url?: string;
 }
 
 export default function Avisos() {
@@ -33,33 +31,22 @@ export default function Avisos() {
     if (!user) return;
     setLoading(true);
     try {
-      // Bypassing type checking for new tables
-      const { data, error } = await (supabase
-        .from('avisos' as any)
+      const { data, error } = await supabase
+        .from('notifications')
         .select('*')
-        .or(`target_usuario_id.is.null,target_usuario_id.eq.${user.id}`)
-        .order('created_at', { ascending: false }) as any);
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        // Fallback to 'notificacoes'
-        const { data: oldData, error: oldError } = await supabase
-          .from('notificacoes' as any)
-          .select('*')
-          .eq('usuario_id', user.id)
-          .order('created_at', { ascending: false });
-        
-        if (oldError) throw oldError;
-        setNotifications((oldData as any) || []);
-      } else {
-        let filteredData = data || [];
-        if (filter === 'unread') {
-          filteredData = filteredData.filter((n: any) => !n.lida);
-        }
-        setNotifications(filteredData);
+      if (error) throw error;
+      
+      let filteredData = data || [];
+      if (filter === 'unread') {
+        filteredData = filteredData.filter((n: any) => !n.read);
       }
+      setNotifications(filteredData);
     } catch (err) {
-      console.error('Error loading avisos:', err);
-      toast.error('Erro ao carregar avisos');
+      console.error('Error loading notifications:', err);
+      toast.error('Erro ao carregar notificações');
     } finally {
       setLoading(false);
     }
@@ -72,11 +59,9 @@ export default function Avisos() {
 
   const markAsRead = async (id: string) => {
     try {
-      const { error } = await (supabase.from('avisos' as any).update({ lida: true }).eq('id', id) as any);
-      if (error) {
-         await (supabase.from('notificacoes' as any).update({ lida: true }).eq('id', id) as any);
-      }
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
+      const { error } = await supabase.from('notifications').update({ read: true }).eq('id', id);
+      if (error) throw error;
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     } catch (err) {
       console.error('Error marking as read:', err);
     }
@@ -84,14 +69,12 @@ export default function Avisos() {
 
   const deleteNotification = async (id: string) => {
     try {
-      const { error } = await (supabase.from('avisos' as any).delete().eq('id', id) as any);
-      if (error) {
-         await (supabase.from('notificacoes' as any).delete().eq('id', id) as any);
-      }
+      const { error } = await supabase.from('notifications').delete().eq('id', id);
+      if (error) throw error;
       setNotifications(prev => prev.filter(n => n.id !== id));
-      toast.success('Aviso removido');
+      toast.success('Notificação removida');
     } catch (err) {
-      toast.error('Erro ao excluir aviso');
+      toast.error('Erro ao excluir notificação');
     }
   };
 
@@ -141,47 +124,43 @@ export default function Avisos() {
           {notifications.map((n) => (
             <Card 
               key={n.id} 
-              className={`surface-1 border-border/50 overflow-hidden rounded-2xl transition-all hover:shadow-xl hover:border-primary/30 group ${!n.lida ? 'border-l-4 border-l-primary' : ''}`}
-              onClick={() => !n.lida && markAsRead(n.id)}
+              className={`surface-1 border-border/50 overflow-hidden rounded-2xl transition-all hover:shadow-xl hover:border-primary/30 group ${!n.read ? 'border-l-4 border-l-primary' : ''}`}
+              onClick={() => !n.read && markAsRead(n.id)}
             >
               <div className="p-6 flex flex-col md:flex-row gap-6">
-                <div className={`h-14 w-14 rounded-2xl shrink-0 flex items-center justify-center shadow-lg ${
-                  n.tipo === 'sistema' ? 'bg-amber-500 text-white' : 
-                  n.tipo === 'financeiro' ? 'bg-green-500 text-white' : 'bg-primary text-white'
-                }`}>
-                  {n.tipo === 'sistema' ? <AlertCircle className="h-7 w-7" /> : 
-                   n.tipo === 'financeiro' ? <Info className="h-7 w-7" /> : <Mail className="h-7 w-7" />}
+                <div className="h-14 w-14 rounded-2xl shrink-0 flex items-center justify-center shadow-lg bg-primary text-white">
+                  <Mail className="h-7 w-7" />
                 </div>
                 
                 <div className="flex-1 space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <h3 className={`text-xl font-bold tracking-tight ${!n.lida ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        {n.titulo}
+                      <h3 className={`text-xl font-bold tracking-tight ${!n.read ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {n.title}
                       </h3>
-                      {!n.lida && <Badge variant="secondary" className="rounded-full bg-primary/20 text-primary border-0 font-bold uppercase text-[10px]">Novo</Badge>}
+                      {!n.read && <Badge variant="secondary" className="rounded-full bg-primary/20 text-primary border-0 font-bold uppercase text-[10px]">Novo</Badge>}
                     </div>
                     <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
                        {formatDate(n.created_at)}
                     </span>
                   </div>
                   
-                  <p className={`text-base leading-relaxed ${!n.lida ? 'text-muted-foreground font-medium' : 'text-muted-foreground/70'}`}>
-                    {n.mensagem}
+                  <p className={`text-base leading-relaxed ${!n.read ? 'text-muted-foreground font-medium' : 'text-muted-foreground/70'}`}>
+                    {n.message}
                   </p>
                   
-                  {n.arquivo_url && (
+                  {n.attachment_url && (
                     <div className="pt-4 flex flex-wrap gap-3">
                        <Button 
                          variant="outline" 
                          className="rounded-xl border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-bold h-11"
                          onClick={(e) => {
                             e.stopPropagation();
-                            window.open(n.arquivo_url, '_blank');
+                            window.open(n.attachment_url, '_blank');
                          }}
                        >
                          <Download className="h-4 w-4 mr-2" /> 
-                         Baixar Anexo: {n.arquivo_nome || 'Arquivo'}
+                         Baixar Anexo
                        </Button>
                     </div>
                   )}
