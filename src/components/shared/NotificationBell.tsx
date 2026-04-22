@@ -35,9 +35,9 @@ export function NotificationBell() {
     setLoading(true);
     try {
       const { data, error } = await (supabase
-        .from('notifications')
+        .from('notifications' as any)
         .select('*')
-        .eq('recipient_id', user.id)
+        .eq('recipient_id' as any, user.id)
         .order('created_at', { ascending: false })
         .limit(10) as any);
       
