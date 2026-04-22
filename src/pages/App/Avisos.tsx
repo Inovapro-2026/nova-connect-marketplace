@@ -33,30 +33,30 @@ export default function Avisos() {
     if (!user) return;
     setLoading(true);
     try {
-      // Trying the new 'avisos' table first
-      let { data, error } = await supabase
-        .from('avisos')
+      // Bypassing type checking for new tables
+      const { data, error } = await (supabase
+        .from('avisos' as any)
         .select('*')
         .or(`target_usuario_id.is.null,target_usuario_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any);
 
       if (error) {
         // Fallback to 'notificacoes'
         const { data: oldData, error: oldError } = await supabase
-          .from('notificacoes')
+          .from('notificacoes' as any)
           .select('*')
           .eq('usuario_id', user.id)
           .order('created_at', { ascending: false });
         
         if (oldError) throw oldError;
-        data = oldData;
+        setNotifications(oldData || []);
+      } else {
+        let filteredData = data || [];
+        if (filter === 'unread') {
+          filteredData = filteredData.filter((n: any) => !n.lida);
+        }
+        setNotifications(filteredData);
       }
-
-      if (filter === 'unread') {
-        data = data?.filter(n => !n.lida) || [];
-      }
-
-      setNotifications(data || []);
     } catch (err) {
       console.error('Error loading avisos:', err);
       toast.error('Erro ao carregar avisos');
@@ -72,9 +72,9 @@ export default function Avisos() {
 
   const markAsRead = async (id: string) => {
     try {
-      const { error } = await supabase.from('avisos').update({ lida: true }).eq('id', id);
+      const { error } = await (supabase.from('avisos' as any).update({ lida: true }).eq('id', id) as any);
       if (error) {
-         await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+         await (supabase.from('notificacoes' as any).update({ lida: true }).eq('id', id) as any);
       }
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
     } catch (err) {
@@ -84,9 +84,9 @@ export default function Avisos() {
 
   const deleteNotification = async (id: string) => {
     try {
-      const { error } = await supabase.from('avisos').delete().eq('id', id);
+      const { error } = await (supabase.from('avisos' as any).delete().eq('id', id) as any);
       if (error) {
-         await supabase.from('notificacoes').delete().eq('id', id);
+         await (supabase.from('notificacoes' as any).delete().eq('id', id) as any);
       }
       setNotifications(prev => prev.filter(n => n.id !== id));
       toast.success('Aviso removido');
