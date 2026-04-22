@@ -45,7 +45,7 @@ export default function ProdutoForm() {
     setLoading(true);
     try {
       // Try products table
-      const { data: pData } = await supabase.from('products' as any).select('*').eq('id', id).maybeSingle();
+      const { data: pData } = await (supabase.from('products' as any).select('*') as any).eq('id', id).maybeSingle();
       
       if (pData) {
         setForm({
