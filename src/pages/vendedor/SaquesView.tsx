@@ -261,7 +261,7 @@ export default function SaquesView() {
                   <span className="text-xs text-success uppercase font-bold tracking-tight">Disponível Agora</span>
                   <span className="text-sm text-muted-foreground">Valor livre para saque imediato</span>
                 </div>
-                <span className="text-xl font-bold text-success">{formatBRL(stats.disponivel)}</span>
+                <span className="text-xl font-bold text-success">{formatBRL(0)}</span>
               </div>
 
               <div className="flex justify-between items-center p-3 rounded-lg bg-muted/10 border border-border/50">
