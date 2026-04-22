@@ -305,7 +305,7 @@ export default function AdminUsuarios() {
                     <div>
                       <h2 className="text-3xl font-black tracking-tight">{selectedUser.nome} {selectedUser.sobrenome}</h2>
                       <div className="flex items-center gap-3 mt-1">
-                        <Badge variant={selectedUser.status === 'ativo' ? 'success' : 'destructive'} className="rounded-full px-3">
+                        <Badge variant={selectedUser.status === 'ativo' ? 'default' : 'destructive'} className="rounded-full px-3">
                           {selectedUser.status.toUpperCase()}
                         </Badge>
                         <span className="text-muted-foreground font-medium">{selectedUser.email}</span>
@@ -317,7 +317,7 @@ export default function AdminUsuarios() {
                       <Key className="h-5 w-5" />
                     </Button>
                     <Button 
-                      variant={selectedUser.status === 'bloqueado' ? 'success' : 'destructive'} 
+                      variant={selectedUser.status === 'bloqueado' ? 'default' : 'destructive'} 
                       size="icon" 
                       className="rounded-xl h-12 w-12"
                       onClick={() => handleAction(selectedUser.id, selectedUser.status === 'bloqueado' ? 'desbloqueio' : 'bloqueio')}
@@ -409,7 +409,7 @@ function UserResumoTab({ user }: { user: Usuario }) {
         <div className="space-y-4">
           <div className="flex justify-between border-b border-border/30 pb-2">
             <span className="text-muted-foreground">Status</span>
-            <Badge variant={user.status === 'ativo' ? 'success' : 'destructive'}>{user.status.toUpperCase()}</Badge>
+            <Badge variant={user.status === 'ativo' ? 'default' : 'destructive'}>{user.status.toUpperCase()}</Badge>
           </div>
           <div className="flex justify-between border-b border-border/30 pb-2">
             <span className="text-muted-foreground">Cadastro</span>
@@ -502,7 +502,7 @@ function UserContaTab({ user, onUpdate }: { user: Usuario, onUpdate: () => void 
       <Card className="p-8 surface-2 border-border/30 rounded-3xl">
         <div className="flex items-center justify-between mb-8">
           <h4 className="font-black text-xl flex items-center gap-2"><Pencil className="h-6 w-6 text-primary" /> Editar Cadastro</h4>
-          <Button variant={editing ? "ghost" : "primary"} onClick={() => setEditing(!editing)} className="rounded-xl">
+          <Button variant={editing ? "ghost" : "default"} onClick={() => setEditing(!editing)} className="rounded-xl">
              {editing ? 'Cancelar' : 'Editar Dados'}
           </Button>
         </div>

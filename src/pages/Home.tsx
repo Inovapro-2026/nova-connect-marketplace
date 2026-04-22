@@ -54,7 +54,7 @@ export default function Home() {
 
   useEffect(() => {
     setLoadingP(true);
-    let q = supabase.from('products')
+    let q: any = (supabase.from('products') as any)
       .select('id, name, price, image_url, category, seller_id')
       .eq('status', 'published')
       .limit(24);
@@ -65,7 +65,7 @@ export default function Home() {
     if (order === 'price_asc') q = q.order('price', { ascending: true });
     if (order === 'price_desc') q = q.order('price', { ascending: false });
 
-    q.then(({ data }) => { setProducts((data as Product[]) ?? []); setLoadingP(false); });
+    q.then(({ data }: any) => { setProducts((data as Product[]) ?? []); setLoadingP(false); });
   }, [debounced, activeCat, order]);
 
   const heroStats = useMemo(() => [
