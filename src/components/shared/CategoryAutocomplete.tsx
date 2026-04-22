@@ -84,7 +84,7 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
       const scope = itemType === 'servico' ? 'service' : 'product';
       
       // Try 'categories' first
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('categories')
         .insert({ 
           nome: name.trim(), 
