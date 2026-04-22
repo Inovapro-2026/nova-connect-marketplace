@@ -34,12 +34,12 @@ export function NotificationBell() {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('notifications')
+      const { data, error } = await (supabase
+        .from('notifications' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(10) as any);
       
       if (error) throw error;
       
@@ -76,7 +76,7 @@ export function NotificationBell() {
 
   const markAsRead = async (id: string) => {
     try {
-      await supabase.from('notifications').update({ read: true }).eq('id', id);
+      await (supabase.from('notifications' as any).update({ read: true }).eq('id', id) as any);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err) {
@@ -87,7 +87,7 @@ export function NotificationBell() {
   const markAllAsRead = async () => {
     if (!user) return;
     try {
-      await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+      await (supabase.from('notifications' as any).update({ read: true }).eq('user_id', user.id).eq('read', false) as any);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
       toast.success('Todas as notificações lidas');
