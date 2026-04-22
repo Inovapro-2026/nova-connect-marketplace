@@ -47,14 +47,14 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
     setLoading(true);
     try {
       // We use the new 'categories' table with 'scope' field
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('categories')
         .select('*')
         .order('nome');
       
       if (error) {
         // Fallback to 'categorias' if 'categories' doesn't exist yet (for transition)
-        const { data: fallbackData, error: fallbackError } = await supabase
+        const { data: fallbackData, error: fallbackError } = await (supabase as any)
           .from('categorias')
           .select('id, nome, slug')
           .order('nome');
@@ -63,7 +63,7 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
         setCategories(fallbackData || []);
       } else {
         // Filter by scope
-        const filtered = data?.filter(c => 
+        const filtered = (data as any[])?.filter((c: any) => 
           !c.scope || c.scope === 'both' || 
           (itemType === 'servico' ? c.scope === 'service' : c.scope === 'product')
         ) || [];
