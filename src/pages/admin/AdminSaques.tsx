@@ -84,7 +84,7 @@ export default function AdminSaques() {
       console.log("ID do Saque:", id);
       console.log("Valor Bruto:", valor);
 
-      const { error } = await supabase.rpc('aprovar_saque_vendedor', {
+      const { error } = await (supabase.rpc as any)('aprovar_saque_vendedor', {
         p_saque_id: id
       });
 
