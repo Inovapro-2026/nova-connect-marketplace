@@ -30,12 +30,11 @@ export default function Avisos() {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('notifications')
+      const { data, error } = await (supabase
+        .from('notifications' as any)
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any);
 
       if (error) throw error;
       
@@ -59,7 +58,7 @@ export default function Avisos() {
 
   const markAsRead = async (id: string) => {
     try {
-      const { error } = await supabase.from('notifications').update({ read: true }).eq('id', id);
+      const { error } = await (supabase.from('notifications' as any).update({ read: true }).eq('id', id) as any);
       if (error) throw error;
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     } catch (err) {
@@ -69,7 +68,7 @@ export default function Avisos() {
 
   const deleteNotification = async (id: string) => {
     try {
-      const { error } = await supabase.from('notifications').delete().eq('id', id);
+      const { error } = await (supabase.from('notifications' as any).delete().eq('id', id) as any);
       if (error) throw error;
       setNotifications(prev => prev.filter(n => n.id !== id));
       toast.success('Notificação removida');
