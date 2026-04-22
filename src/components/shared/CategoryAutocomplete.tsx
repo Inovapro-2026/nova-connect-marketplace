@@ -22,8 +22,10 @@ import { toast } from 'sonner';
 interface Category {
   id: string;
   name: string;
+  nome?: string;
   slug: string;
   scope?: string;
+  tipo?: string;
 }
 
 interface Props {
@@ -48,13 +50,16 @@ export function CategoryAutocomplete({ value, onChange, itemType }: Props) {
     try {
       const { data, error } = await (supabase
         .from('categories' as any)
-        .select('id, name, slug, scope')
-        .order('name') as any);
+        .select('*') as any);
       
       if (error) throw error;
 
       // Filter by scope
-      const filtered = (data as any[])?.filter((c: any) => 
+      const filtered = (data as any[])?.map((c: any) => ({
+        ...c,
+        name: c.name || c.nome || 'Sem nome',
+        scope: c.scope || c.tipo || 'both'
+      })).filter((c: any) => 
         !c.scope || c.scope === 'both' || 
         (itemType === 'servico' ? c.scope === 'service' : c.scope === 'product')
       ) || [];
