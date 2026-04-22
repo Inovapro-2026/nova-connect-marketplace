@@ -800,11 +800,11 @@ function UserAvisosTab({ user, adminAuthId }: { user: Usuario, adminAuthId: stri
             history.map(h => (
               <div key={h.id} className="p-4 bg-surface-1 border border-border/30 rounded-2xl">
                 <div className="flex justify-between items-start mb-2">
-                  <span className="font-bold text-sm">{h.title || h.titulo}</span>
+                  <span className="font-bold text-sm">{h.titulo}</span>
                   <span className="text-[10px] text-muted-foreground">{formatDate(h.created_at)}</span>
                 </div>
-                <p className="text-xs text-muted-foreground line-clamp-2">{h.message || h.mensagem}</p>
-                {(h.attachment_url || h.arquivo_url) && (
+                <p className="text-xs text-muted-foreground line-clamp-2">{h.mensagem}</p>
+                {h.link && (
                   <div className="mt-2 flex items-center gap-2 text-[10px] text-primary font-bold">
                     <Download className="h-3 w-3" /> Anexo incluído
                   </div>
