@@ -714,10 +714,10 @@ function UserAvisosTab({ user, adminAuthId }: { user: Usuario, adminAuthId: stri
 
   const loadHistory = async () => {
     try {
-      const { data } = await ((supabase as any).from('notifications')
+      const { data } = await supabase.from('notifications')
         .select('*')
-        .eq('recipient_id', user.auth_user_id)
-        .order('created_at', { ascending: false }));
+        .eq('user_id', user.auth_user_id)
+        .order('created_at', { ascending: false });
       
       setHistory(data || []);
     } catch (err) {
