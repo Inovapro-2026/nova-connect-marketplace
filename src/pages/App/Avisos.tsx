@@ -14,11 +14,11 @@ import { toast } from 'sonner';
 
 interface Notification {
   id: string;
-  title: string;
-  message: string;
-  read: boolean;
+  titulo: string;
+  mensagem: string;
+  lida: boolean;
   created_at: string;
-  attachment_url?: string;
+  link?: string;
 }
 
 export default function Avisos() {
