@@ -171,7 +171,7 @@ export default function SaquesView() {
 
           <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
             <div className="text-sm text-muted-foreground mb-1">Disponível para Saque</div>
-            <div className="text-3xl font-bold text-primary">{formatBRL(stats.disponivel)}</div>
+            <div className="text-3xl font-bold text-primary">{formatBRL(0)}</div>
           </div>
 
           <form onSubmit={handleRequestSaque} className="space-y-4">
@@ -261,7 +261,7 @@ export default function SaquesView() {
                   <span className="text-xs text-success uppercase font-bold tracking-tight">Disponível Agora</span>
                   <span className="text-sm text-muted-foreground">Valor livre para saque imediato</span>
                 </div>
-                <span className="text-xl font-bold text-success">{formatBRL(stats.disponivel)}</span>
+                <span className="text-xl font-bold text-success">{formatBRL(0)}</span>
               </div>
 
               <div className="flex justify-between items-center p-3 rounded-lg bg-muted/10 border border-border/50">
