@@ -30,6 +30,7 @@ export default function Avisos() {
   const load = async () => {
     if (!user) return;
     setLoading(true);
+    try {
       const { data, error } = await (supabase
         .from('notifications' as any)
         .select('*')
